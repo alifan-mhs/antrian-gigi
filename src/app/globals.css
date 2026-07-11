@@ -128,3 +128,28 @@
     @apply font-sans;
   }
 }
+
+@theme {
+  --animate-promo-shimmer: promo-shimmer 2.8s ease-in-out infinite;
+  --animate-promo-glow: promo-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes promo-shimmer {
+  0% {
+    transform: translateX(-150%) skewX(-12deg);
+  }
+  50%,
+  100% {
+    transform: translateX(250%) skewX(-12deg);
+  }
+}
+
+@keyframes promo-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--secondary) 45%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in oklch, var(--secondary) 0%, transparent);
+  }
+}
