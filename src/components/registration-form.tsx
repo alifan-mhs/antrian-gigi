@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import { registerAction, type RegisterState } from "@/app/actions";
@@ -17,6 +18,7 @@ export function RegistrationForm() {
     initialState
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const [consent, setConsent] = useState(false);
 
   if (state.status === "success") {
     return (
@@ -65,6 +67,24 @@ export function RegistrationForm() {
           placeholder="08xxxxxxxxxx"
           required
         />
+        <div className="flex items-start gap-2 rounded-lg border bg-muted/50 p-3">
+          <input type="hidden" name="consent" value={consent ? "on" : ""} />
+          <Checkbox
+            id="consent"
+            checked={consent}
+            onCheckedChange={(checked) => setConsent(checked === true)}
+            required
+            className="mt-0.5"
+          />
+          <Label
+            htmlFor="consent"
+            className="text-xs leading-relaxed font-normal text-muted-foreground"
+          >
+            Saya secara sadar memberikan nomor HP/WA ini kepada admin klinik
+            untuk keperluan follow up pendaftaran. Data pribadi saya dijamin
+            keamanannya dan tidak akan disebarluaskan ke pihak lain.
+          </Label>
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="complaint">Keluhan Singkat (opsional)</Label>
@@ -75,7 +95,12 @@ export function RegistrationForm() {
           rows={3}
         />
       </div>
-      <Button type="submit" className="w-full" size="lg" disabled={isPending}>
+      <Button
+        type="submit"
+        className="w-full"
+        size="lg"
+        disabled={isPending || !consent}
+      >
         {isPending ? "Mendaftar..." : "Daftar Sekarang"}
       </Button>
     </form>

@@ -22,6 +22,7 @@ export async function registerAction(
     name: formData.get("name"),
     phone: formData.get("phone"),
     complaint: formData.get("complaint"),
+    consent: formData.get("consent"),
   });
 
   if (!parsed.success) {

@@ -18,6 +18,9 @@ export const registrationSchema = z.object({
     .max(500, "Keluhan terlalu panjang")
     .optional()
     .or(z.literal("")),
+  consent: z.literal("on", {
+    error: "Anda harus menyetujui pemberian nomor HP sebelum mendaftar",
+  }),
 });
 
 export type RegistrationInput = z.infer<typeof registrationSchema>;
