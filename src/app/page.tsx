@@ -6,6 +6,7 @@ import {
   hasTimeWindowStarted,
 } from "@/lib/date";
 import { RegistrationForm } from "@/components/registration-form";
+import { HiddenAdminAccess } from "@/components/hidden-admin-access";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -49,19 +50,21 @@ export default async function DaftarPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-5 px-4 py-8">
-      <header className="space-y-1 text-center">
-        <p className="text-sm font-medium text-muted-foreground">
-          {formatDisplayDate(today)}
-        </p>
-        <h1 className="text-2xl font-bold text-primary">
-          Pendaftaran Pasien Hari Ini
-        </h1>
-        {session && isManuallyOpen && (
-          <p className="text-xs text-muted-foreground">
-            Jam pendaftaran: {session.startTime} - {session.endTime} WIB
+      <HiddenAdminAccess>
+        <header className="space-y-1 text-center">
+          <p className="text-sm font-medium text-muted-foreground">
+            {formatDisplayDate(today)}
           </p>
-        )}
-      </header>
+          <h1 className="text-2xl font-bold text-primary">
+            Pendaftaran Pasien Hari Ini
+          </h1>
+          {session && isManuallyOpen && (
+            <p className="text-xs text-muted-foreground">
+              Jam pendaftaran: {session.startTime} - {session.endTime} WIB
+            </p>
+          )}
+        </header>
+      </HiddenAdminAccess>
 
       {session?.promoText && (
         <Card className="border-secondary bg-accent">
