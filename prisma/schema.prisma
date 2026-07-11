@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Operator {
+  id           String         @id @default(uuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  createdAt    DateTime       @default(now())
+  sessions     DailySession[]
+}
+
+model DailySession {
+  id            String         @id @default(uuid())
+  operator      Operator       @relation(fields: [operatorId], references: [id])
+  operatorId    String
+  date          DateTime       @db.Date
+  quota         Int
+  startTime     String         @default("08:00")
+  endTime       String         @default("17:00")
+  promoText     String?
+  isOpen        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  registrations Registration[]
+
+  @@unique([operatorId, date])
+}
+
+model Registration {
+  id          String             @id @default(uuid())
+  session     DailySession       @relation(fields: [sessionId], references: [id])
+  sessionId   String
+  queueNumber Int
+  name        String
+  phone       String
+  complaint   String?
+  status      RegistrationStatus @default(MENUNGGU)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@unique([sessionId, phone])
+  @@index([sessionId, status])
+}
+
+enum RegistrationStatus {
+  MENUNGGU
+  DIHUBUNGI
+  DIKONFIRMASI
+  SELESAI
+  BATAL
+  TIDAK_DATANG
+}

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "DailySession" ADD COLUMN     "endTime" TEXT NOT NULL DEFAULT '17:00',
+ADD COLUMN     "startTime" TEXT NOT NULL DEFAULT '08:00';
