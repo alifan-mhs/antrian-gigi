@@ -7,6 +7,7 @@ import {
 } from "@/lib/date";
 import { RegistrationForm } from "@/components/registration-form";
 import { HiddenAdminAccess } from "@/components/hidden-admin-access";
+import { PwaStandaloneRedirect } from "@/components/pwa-standalone-redirect";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -50,6 +51,7 @@ export default async function DaftarPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-5 px-4 py-8">
+      <PwaStandaloneRedirect />
       <HiddenAdminAccess>
         <header className="space-y-1 text-center">
           <p className="text-sm font-medium text-muted-foreground">

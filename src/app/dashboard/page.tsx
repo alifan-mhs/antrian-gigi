@@ -1,25 +1,41 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
-import { todayAsDate, formatDisplayDate } from "@/lib/date";
+import {
+  parseDateParam,
+  dateToParam,
+  todayDateString,
+  formatDisplayDate,
+} from "@/lib/date";
 import { SessionPanel } from "@/components/dashboard/session-panel";
 import { QueueList } from "@/components/dashboard/queue-list";
-import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/dashboard/date-picker";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { logoutAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string }>;
+}) {
   const operatorSession = await getSession();
   if (!operatorSession) redirect("/login");
 
-  const today = todayAsDate();
+  const { date: dateParam } = await searchParams;
+  const selectedDate = parseDateParam(dateParam);
+  const selectedDateParam = dateToParam(selectedDate);
+  const todayParam = todayDateString();
+  const isToday = selectedDateParam === todayParam;
 
   const dailySession = await prisma.dailySession.findUnique({
     where: {
       operatorId_date: {
         operatorId: operatorSession.operatorId,
-        date: today,
+        date: selectedDate,
       },
     },
     include: {
@@ -59,23 +75,43 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:py-8">
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            {formatDisplayDate(today)}
-          </p>
-          <h1 className="text-xl font-bold text-primary sm:text-2xl">
-            Halo, {operatorSession.name}
-          </h1>
+      <header className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">
+              {formatDisplayDate(selectedDate)}
+              {!isToday && (
+                <span className="ml-1 font-medium text-secondary-foreground">
+                  (bukan hari ini)
+                </span>
+              )}
+            </p>
+            <h1 className="text-xl font-bold text-primary sm:text-2xl">
+              Halo, {operatorSession.name}
+            </h1>
+          </div>
+          <form action={logoutAction}>
+            <Button type="submit" variant="outline" size="sm">
+              Keluar
+            </Button>
+          </form>
         </div>
-        <form action={logoutAction}>
-          <Button type="submit" variant="outline" size="sm">
-            Keluar
-          </Button>
-        </form>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <DatePicker selectedDate={selectedDateParam} todayDate={todayParam} />
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            <ExternalLink />
+            Lihat Halaman Publik
+          </Link>
+        </div>
       </header>
 
-      <SessionPanel session={sessionData} />
+      <SessionPanel session={sessionData} dateParam={selectedDateParam} />
 
       {sessionData && (
         <section className="space-y-3">

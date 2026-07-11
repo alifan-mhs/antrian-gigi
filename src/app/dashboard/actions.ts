@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSession, destroySession } from "@/lib/session";
 import { sessionSettingsSchema } from "@/lib/validation";
-import { todayAsDate } from "@/lib/date";
+import { parseDateParam } from "@/lib/date";
 import { RegistrationStatus } from "@prisma/client";
 
 export type SessionFormState = {
@@ -18,11 +18,13 @@ async function requireOperator() {
   return session;
 }
 
-export async function openTodaySessionAction(
+export async function openSessionForDateAction(
+  dateParam: string,
   _prevState: SessionFormState,
   formData: FormData
 ): Promise<SessionFormState> {
   const operator = await requireOperator();
+  const date = parseDateParam(dateParam);
 
   const parsed = sessionSettingsSchema.safeParse({
     quota: formData.get("quota"),
@@ -39,7 +41,7 @@ export async function openTodaySessionAction(
     where: {
       operatorId_date: {
         operatorId: operator.operatorId,
-        date: todayAsDate(),
+        date,
       },
     },
     update: {
@@ -51,7 +53,7 @@ export async function openTodaySessionAction(
     },
     create: {
       operatorId: operator.operatorId,
-      date: todayAsDate(),
+      date,
       quota: parsed.data.quota,
       startTime: parsed.data.startTime,
       endTime: parsed.data.endTime,

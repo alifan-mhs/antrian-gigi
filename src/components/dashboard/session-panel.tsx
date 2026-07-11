@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  openTodaySessionAction,
+  openSessionForDateAction,
   toggleSessionOpenAction,
   updateSessionSettingsAction,
   type SessionFormState,
@@ -34,25 +34,32 @@ type SessionData = {
 
 const initialState: SessionFormState = {};
 
-export function SessionPanel({ session }: { session: SessionData | null }) {
+export function SessionPanel({
+  session,
+  dateParam,
+}: {
+  session: SessionData | null;
+  dateParam: string;
+}) {
   if (!session) {
-    return <OpenSessionCard />;
+    return <OpenSessionCard dateParam={dateParam} />;
   }
   return <ManageSessionCard session={session} />;
 }
 
-function OpenSessionCard() {
+function OpenSessionCard({ dateParam }: { dateParam: string }) {
+  const boundAction = openSessionForDateAction.bind(null, dateParam);
   const [state, formAction, isPending] = useActionState(
-    openTodaySessionAction,
+    boundAction,
     initialState
   );
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Buka Pendaftaran Hari Ini</CardTitle>
+        <CardTitle>Buka Pendaftaran</CardTitle>
         <CardDescription>
-          Belum ada sesi pendaftaran untuk hari ini. Atur kuota dan promo
+          Belum ada sesi pendaftaran untuk tanggal ini. Atur kuota dan promo
           untuk membukanya.
         </CardDescription>
       </CardHeader>
@@ -123,13 +130,24 @@ function ManageSessionCard({ session }: { session: SessionData }) {
   const [isOpen, setIsOpen] = useState(session.isOpen);
   const [isToggling, startToggle] = useTransition();
 
+  // Adjust state during render (not in an effect) when the server's true
+  // value changes — this same component instance persists across
+  // router.refresh()-driven re-renders, so without this the Switch would
+  // keep showing whichever value was last set locally and never pick up
+  // fresh server state (e.g. after a refresh lands mid-toggle).
+  const [prevIsOpen, setPrevIsOpen] = useState(session.isOpen);
+  if (session.isOpen !== prevIsOpen) {
+    setPrevIsOpen(session.isOpen);
+    setIsOpen(session.isOpen);
+  }
+
   const remaining = Math.max(session.quota - session.filled, 0);
 
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between gap-4">
         <div>
-          <CardTitle>Sesi Pendaftaran Hari Ini</CardTitle>
+          <CardTitle>Sesi Pendaftaran</CardTitle>
           <CardDescription>
             {session.filled} terdaftar &middot; sisa {remaining} dari{" "}
             {session.quota} kuota &middot; jam {session.startTime}-
@@ -145,8 +163,12 @@ function ManageSessionCard({ session }: { session: SessionData }) {
             disabled={isToggling}
             onCheckedChange={(checked) => {
               setIsOpen(checked);
-              startToggle(() => {
-                toggleSessionOpenAction(session.id, checked);
+              startToggle(async () => {
+                // Must be awaited (and returned into the transition) so
+                // isToggling stays true until the write + revalidation
+                // actually finish — otherwise a fast second toggle can race
+                // ahead of the first and land the DB in the wrong state.
+                await toggleSessionOpenAction(session.id, checked);
               });
             }}
           />
