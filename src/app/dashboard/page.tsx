@@ -11,7 +11,7 @@ import {
 } from "@/lib/date";
 import { SessionPanel } from "@/components/dashboard/session-panel";
 import { QueueList } from "@/components/dashboard/queue-list";
-import { DatePicker } from "@/components/dashboard/date-picker";
+import { DatePicker } from "@/components/date-picker";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { logoutAction } from "./actions";
 
@@ -98,7 +98,11 @@ export default async function DashboardPage({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <DatePicker selectedDate={selectedDateParam} todayDate={todayParam} />
+          <DatePicker
+            selectedDate={selectedDateParam}
+            todayDate={todayParam}
+            basePath="/dashboard"
+          />
           <Link
             href="/"
             target="_blank"

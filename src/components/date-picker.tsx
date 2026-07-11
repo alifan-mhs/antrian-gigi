@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 export function DatePicker({
   selectedDate,
   todayDate,
+  basePath,
 }: {
   selectedDate: string;
   todayDate: string;
+  basePath: string;
 }) {
   const router = useRouter();
   const isToday = selectedDate === todayDate;
@@ -22,7 +24,7 @@ export function DatePicker({
         onChange={(e) => {
           const value = e.target.value;
           if (!value) return;
-          router.push(`/dashboard?date=${value}`);
+          router.push(`${basePath}?date=${value}`);
         }}
         className="w-auto"
       />
@@ -31,7 +33,7 @@ export function DatePicker({
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push(basePath)}
         >
           Hari Ini
         </Button>

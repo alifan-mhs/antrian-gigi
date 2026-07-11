@@ -1,17 +1,13 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import {
-  todayAsDate,
-  formatDisplayDate,
-  isWithinTimeWindow,
-  hasTimeWindowStarted,
-} from "@/lib/date";
-import { Sparkles } from "lucide-react";
+import { todayAsDate, formatDisplayDate } from "@/lib/date";
+import { getSessionStatus } from "@/lib/session-status";
 import { RegistrationForm } from "@/components/registration-form";
 import { HiddenAdminAccess } from "@/components/hidden-admin-access";
 import { PwaStandaloneRedirect } from "@/components/pwa-standalone-redirect";
+import { PromoBanner } from "@/components/promo-banner";
+import { SessionStatusAlerts } from "@/components/session-status-alerts";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Short-lived ISR: absorb bursts of concurrent walk-in visits with one shared
 // cached render instead of a DB hit per request. Mutations (registration,
@@ -35,20 +31,8 @@ export default async function DaftarPage() {
     },
   });
 
-  const isManuallyOpen = !!session?.isOpen;
-  const inTimeWindow =
-    isManuallyOpen && session
-      ? isWithinTimeWindow(session.startTime, session.endTime)
-      : false;
-  const notStartedYet =
-    isManuallyOpen && session ? !hasTimeWindowStarted(session.startTime) : false;
-  const windowEnded = isManuallyOpen && !inTimeWindow && !notStartedYet;
-
-  const quota = session?.quota ?? 0;
-  const filled = session?._count.registrations ?? 0;
-  const remaining = Math.max(quota - filled, 0);
-  const isFull = inTimeWindow && remaining <= 0;
-  const canRegister = inTimeWindow && !isFull;
+  const status = getSessionStatus(session, session?._count.registrations ?? 0);
+  const { isManuallyOpen, remaining, quota, canRegister } = status;
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-5 px-4 py-8">
@@ -69,18 +53,7 @@ export default async function DaftarPage() {
         </header>
       </HiddenAdminAccess>
 
-      {session?.promoText && (
-        <Card className="animate-promo-glow relative border-secondary bg-accent duration-700 animate-in fade-in slide-in-from-top-3">
-          <div
-            aria-hidden
-            className="animate-promo-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent"
-          />
-          <CardContent className="relative flex items-center justify-center gap-2 py-3 text-center text-sm font-medium text-accent-foreground">
-            <Sparkles className="size-4 shrink-0 animate-pulse text-secondary-foreground/80" />
-            <span>{session.promoText}</span>
-          </CardContent>
-        </Card>
-      )}
+      {session?.promoText && <PromoBanner text={session.promoText} />}
 
       {canRegister && (
         <div className="flex items-center justify-center">
@@ -90,46 +63,16 @@ export default async function DaftarPage() {
         </div>
       )}
 
-      {!isManuallyOpen && (
-        <Alert>
-          <AlertTitle>Pendaftaran hari ini sudah ditutup</AlertTitle>
-          <AlertDescription>
-            Silakan cek kembali di lain waktu atau hubungi klinik secara
-            langsung.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {notStartedYet && session && (
-        <Alert>
-          <AlertTitle>Pendaftaran belum dibuka</AlertTitle>
-          <AlertDescription>
-            Pendaftaran hari ini dibuka mulai jam {session.startTime} WIB.
-            Silakan kembali lagi nanti.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {windowEnded && session && (
-        <Alert>
-          <AlertTitle>Jam pendaftaran hari ini sudah berakhir</AlertTitle>
-          <AlertDescription>
-            Pendaftaran hari ini hanya dibuka jam {session.startTime} -{" "}
-            {session.endTime} WIB. Silakan coba lagi besok.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {isFull && (
-        <Alert>
-          <AlertTitle>Kuota hari ini sudah penuh</AlertTitle>
-          <AlertDescription>
-            Terima kasih atas minatnya, silakan coba daftar lagi besok.
-          </AlertDescription>
-        </Alert>
-      )}
+      <SessionStatusAlerts session={session} status={status} />
 
       {canRegister && <RegistrationForm />}
+
+      <p className="pt-2 text-center text-xs text-muted-foreground">
+        Ingin cek jadwal hari lain?{" "}
+        <Link href="/jadwal" className="font-medium text-primary underline underline-offset-2">
+          Lihat di sini
+        </Link>
+      </p>
     </main>
   );
 }
