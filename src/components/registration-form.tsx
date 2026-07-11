@@ -8,6 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { registerAction, type RegisterState } from "@/app/actions";
 
 const initialState: RegisterState = { status: "idle" };
@@ -19,6 +27,7 @@ export function RegistrationForm() {
   );
   const formRef = useRef<HTMLFormElement>(null);
   const [consent, setConsent] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   if (state.status === "success") {
     return (
@@ -96,13 +105,42 @@ export function RegistrationForm() {
         />
       </div>
       <Button
-        type="submit"
+        type="button"
         className="w-full"
         size="lg"
         disabled={isPending || !consent}
+        onClick={() => {
+          if (formRef.current?.reportValidity()) {
+            setShowConfirm(true);
+          }
+        }}
       >
         {isPending ? "Mendaftar..." : "Daftar Sekarang"}
       </Button>
+
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Pendaftaran</DialogTitle>
+            <DialogDescription>
+              Setelah Anda mendaftar, Anda akan di-follow up oleh petugas
+              yang akan melakukan tindakan tersebut kepada Anda.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              className="w-full"
+              onClick={() => {
+                setShowConfirm(false);
+                formRef.current?.requestSubmit();
+              }}
+            >
+              Saya Mengerti
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }
