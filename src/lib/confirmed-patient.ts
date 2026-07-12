@@ -20,6 +20,40 @@ export const TIME_SLOT_INFO: Record<
 
 export const TIME_SLOT_ORDER: ConfirmedTimeSlot[] = ["SIANG_SORE", "MALAM"];
 
+// 1-hour appointment windows within a slot, e.g. SIANG_SORE (14:30-17:30) ->
+// ["14:00", "15:00", "16:00", "17:00"]. Approximate on purpose — the nurse
+// picks a round hour as a rough window, not an exact-to-the-minute booking.
+export function getAppointmentHourOptions(slot: ConfirmedTimeSlot): string[] {
+  const { startTime, endTime } = TIME_SLOT_INFO[slot];
+  const startHour = Number(startTime.split(":")[0]);
+  const endHour = Number(endTime.split(":")[0]);
+  const hours: string[] = [];
+  for (let h = startHour; h <= endHour; h++) {
+    hours.push(`${String(h).padStart(2, "0")}:00`);
+  }
+  return hours;
+}
+
+export function isValidAppointmentHour(slot: ConfirmedTimeSlot, appointmentTime: string) {
+  return getAppointmentHourOptions(slot).includes(appointmentTime);
+}
+
+// "16:00" -> "16.00 - 16.59 WIB" (compact, for dropdowns/badges)
+export function formatAppointmentWindow(appointmentTime: string): string {
+  const hour = Number(appointmentTime.split(":")[0]);
+  const start = `${String(hour).padStart(2, "0")}.00`;
+  const end = `${String(hour).padStart(2, "0")}.59`;
+  return `${start} - ${end} WIB`;
+}
+
+// "16:00" -> "Tindakan akan dilakukan sekitar rentang waktu 16.00 sampai 16.59."
+export function formatAppointmentSentence(appointmentTime: string): string {
+  const hour = Number(appointmentTime.split(":")[0]);
+  const start = `${String(hour).padStart(2, "0")}.00`;
+  const end = `${String(hour).padStart(2, "0")}.59`;
+  return `Tindakan akan dilakukan sekitar rentang waktu ${start} sampai ${end}.`;
+}
+
 export const CONFIRMED_STATUS_LABEL: Record<ConfirmedPatientStatus, string> = {
   TERKONFIRMASI: "Terkonfirmasi",
   SELESAI: "Selesai",

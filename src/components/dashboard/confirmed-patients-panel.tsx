@@ -27,6 +27,9 @@ import {
   CONFIRMED_STATUS_LABEL,
   CONFIRMED_STATUS_BADGE_CLASS,
   CONFIRMED_STATUS_ORDER,
+  getAppointmentHourOptions,
+  formatAppointmentWindow,
+  formatAppointmentSentence,
 } from "@/lib/confirmed-patient";
 import { cn } from "@/lib/utils";
 import {
@@ -39,6 +42,7 @@ type ConfirmedPatient = {
   id: string;
   promoLabel: string;
   timeSlot: ConfirmedTimeSlot;
+  appointmentTime: string | null;
   name: string;
   phone: string;
   complaint: string | null;
@@ -69,6 +73,7 @@ export function ConfirmedPatientsPanel({
     initialState
   );
   const [timeSlot, setTimeSlot] = useState<ConfirmedTimeSlot | "">("");
+  const [appointmentTime, setAppointmentTime] = useState("");
   const [mode, setMode] = useState<"pilih" | "manual">(
     eligibleRegistrations.length > 0 ? "pilih" : "manual"
   );
@@ -201,7 +206,10 @@ export function ConfirmedPatientsPanel({
               <input type="hidden" name="timeSlot" value={timeSlot} />
               <Select
                 value={timeSlot}
-                onValueChange={(value) => setTimeSlot(value as ConfirmedTimeSlot)}
+                onValueChange={(value) => {
+                  setTimeSlot(value as ConfirmedTimeSlot);
+                  setAppointmentTime("");
+                }}
               >
                 <SelectTrigger id="confirmed-timeSlot" className="w-full">
                   <SelectValue placeholder="Pilih waktu Siang/Sore atau Malam" />
@@ -214,6 +222,36 @@ export function ConfirmedPatientsPanel({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmed-appointmentTime">Jam Tindakan</Label>
+              <input type="hidden" name="appointmentTime" value={appointmentTime} />
+              <Select
+                value={appointmentTime}
+                onValueChange={(value) => setAppointmentTime(value ?? "")}
+                disabled={!timeSlot}
+              >
+                <SelectTrigger id="confirmed-appointmentTime" className="w-full">
+                  <SelectValue
+                    placeholder={
+                      timeSlot ? "Pilih jam tindakan" : "Pilih waktu kedatangan dahulu"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {(timeSlot ? getAppointmentHourOptions(timeSlot) : []).map((hour) => (
+                    <SelectItem key={hour} value={hour}>
+                      {formatAppointmentWindow(hour)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {appointmentTime && (
+                <p className="text-xs text-muted-foreground">
+                  {formatAppointmentSentence(appointmentTime)}
+                </p>
+              )}
             </div>
 
             <Button type="submit" className="w-full sm:w-auto" disabled={isPending}>
@@ -266,6 +304,11 @@ function ConfirmedPatientCard({ patient }: { patient: ConfirmedPatient }) {
             {patient.complaint && (
               <p className="text-sm break-words text-muted-foreground">
                 {patient.complaint}
+              </p>
+            )}
+            {patient.appointmentTime && (
+              <p className="text-xs text-muted-foreground">
+                Jam tindakan: {formatAppointmentWindow(patient.appointmentTime)}
               </p>
             )}
           </div>

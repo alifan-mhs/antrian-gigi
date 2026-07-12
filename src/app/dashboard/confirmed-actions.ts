@@ -11,6 +11,7 @@ import {
   normalizePhone,
 } from "@/lib/validation";
 import { parseDateParam } from "@/lib/date";
+import { isValidAppointmentHour } from "@/lib/confirmed-patient";
 
 export type ConfirmedPatientFormState = {
   error?: string;
@@ -32,9 +33,14 @@ export async function addConfirmedPatientAction(
 
   const slotParsed = confirmedPatientTimeSlotSchema.safeParse({
     timeSlot: formData.get("timeSlot"),
+    appointmentTime: formData.get("appointmentTime"),
   });
   if (!slotParsed.success) {
     return { error: slotParsed.error.issues[0]?.message ?? "Data tidak valid" };
+  }
+
+  if (!isValidAppointmentHour(slotParsed.data.timeSlot, slotParsed.data.appointmentTime)) {
+    return { error: "Jam tindakan tidak sesuai dengan sesi waktu yang dipilih" };
   }
 
   const sourceRegistrationId = formData.get("sourceRegistrationId");
@@ -82,6 +88,7 @@ export async function addConfirmedPatientAction(
           date,
           promoLabel: `Pasien Promo ${count + 1}`,
           timeSlot: slotParsed.data.timeSlot,
+          appointmentTime: slotParsed.data.appointmentTime,
           name,
           phone,
           complaint,

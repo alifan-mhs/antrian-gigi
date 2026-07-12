@@ -43,6 +43,9 @@ export const sessionSettingsSchema = z
 // Always required regardless of where the patient's name/phone come from.
 export const confirmedPatientTimeSlotSchema = z.object({
   timeSlot: z.enum(ConfirmedTimeSlot, { error: "Pilih waktu Siang/Sore atau Malam" }),
+  appointmentTime: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):00$/, "Pilih jam tindakan"),
 });
 
 // Only used in manual-entry mode (no existing walk-in registration to copy from).

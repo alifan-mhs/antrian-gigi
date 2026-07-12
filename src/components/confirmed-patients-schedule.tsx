@@ -1,9 +1,18 @@
 import { ConfirmedTimeSlot } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { TIME_SLOT_INFO, TIME_SLOT_ORDER } from "@/lib/confirmed-patient";
+import {
+  TIME_SLOT_INFO,
+  TIME_SLOT_ORDER,
+  formatAppointmentSentence,
+} from "@/lib/confirmed-patient";
 import { maskName } from "@/lib/mask";
 
-type Patient = { promoLabel: string; timeSlot: ConfirmedTimeSlot; name: string };
+type Patient = {
+  promoLabel: string;
+  timeSlot: ConfirmedTimeSlot;
+  name: string;
+  appointmentTime: string | null;
+};
 
 export function ConfirmedPatientsSchedule({ patients }: { patients: Patient[] }) {
   return (
@@ -22,14 +31,18 @@ export function ConfirmedPatientsSchedule({ patients }: { patients: Patient[] })
               {slotPatients.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Belum ada pasien.</p>
               ) : (
-                <ul className="space-y-1">
+                <ul className="space-y-2">
                   {slotPatients.map((p) => (
-                    <li
-                      key={p.promoLabel}
-                      className="flex items-center justify-between gap-2 text-sm"
-                    >
-                      <span className="font-medium">{p.promoLabel}</span>
-                      <span className="text-muted-foreground">{maskName(p.name)}</span>
+                    <li key={p.promoLabel} className="space-y-0.5 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{p.promoLabel}</span>
+                        <span className="text-muted-foreground">{maskName(p.name)}</span>
+                      </div>
+                      {p.appointmentTime && (
+                        <p className="text-xs text-muted-foreground">
+                          {formatAppointmentSentence(p.appointmentTime)}
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>

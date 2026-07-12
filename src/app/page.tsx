@@ -38,7 +38,7 @@ export default async function DaftarPage() {
 
   const confirmedPatients = await prisma.confirmedPatient.findMany({
     where: { date: today, status: { in: CONFIRMED_VISIBLE_STATUSES } },
-    select: { promoLabel: true, timeSlot: true, name: true },
+    select: { promoLabel: true, timeSlot: true, name: true, appointmentTime: true },
     orderBy: { createdAt: "asc" },
   });
 

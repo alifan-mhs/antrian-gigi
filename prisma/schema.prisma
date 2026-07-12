@@ -74,6 +74,7 @@ model ConfirmedPatient {
   date                 DateTime               @db.Date
   promoLabel           String
   timeSlot             ConfirmedTimeSlot
+  appointmentTime      String? // "HH:00" — a 1-hour window within timeSlot, e.g. "16:00" -> 16.00-16.59
   name                 String
   phone                String
   complaint            String?
