@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ConfirmedTimeSlot } from "@prisma/client";
 
 const phoneRegex = /^(\+62|62|0)8[1-9][0-9]{6,11}$/;
 
@@ -38,6 +39,30 @@ export const sessionSettingsSchema = z
     message: "Jam selesai harus lebih besar dari jam mulai",
     path: ["endTime"],
   });
+
+// Always required regardless of where the patient's name/phone come from.
+export const confirmedPatientTimeSlotSchema = z.object({
+  timeSlot: z.enum(ConfirmedTimeSlot, { error: "Pilih waktu Siang/Sore atau Malam" }),
+});
+
+// Only used in manual-entry mode (no existing walk-in registration to copy from).
+export const confirmedPatientManualSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(3, "Nama minimal 3 karakter")
+    .max(100, "Nama terlalu panjang"),
+  phone: z
+    .string()
+    .trim()
+    .regex(phoneRegex, "Format nomor HP/WA tidak valid, contoh: 081234567890"),
+  complaint: z
+    .string()
+    .trim()
+    .max(500, "Keluhan terlalu panjang")
+    .optional()
+    .or(z.literal("")),
+});
 
 export const loginSchema = z.object({
   email: z.string().trim().email("Email tidak valid"),

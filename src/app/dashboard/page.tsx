@@ -11,6 +11,7 @@ import {
 } from "@/lib/date";
 import { SessionPanel } from "@/components/dashboard/session-panel";
 import { QueueList } from "@/components/dashboard/queue-list";
+import { ConfirmedPatientsPanel } from "@/components/dashboard/confirmed-patients-panel";
 import { DatePicker } from "@/components/date-picker";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { logoutAction } from "./actions";
@@ -41,6 +42,7 @@ export default async function DashboardPage({
     include: {
       registrations: {
         orderBy: { queueNumber: "asc" },
+        include: { confirmedPatient: { select: { id: true } } },
       },
     },
   });
@@ -72,6 +74,24 @@ export default async function DashboardPage({
       status: r.status,
       createdAt: r.createdAt.toISOString(),
     })) ?? [];
+
+  const confirmedPatients = await prisma.confirmedPatient.findMany({
+    where: { operatorId: operatorSession.operatorId, date: selectedDate },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // Walk-in patients already marked "Dikonfirmasi" that haven't been
+  // scheduled into a time slot yet — lets the nurse reuse their existing
+  // name/phone/complaint instead of retyping everything.
+  const eligibleRegistrations =
+    dailySession?.registrations
+      .filter((r) => r.status === "DIKONFIRMASI" && !r.confirmedPatient)
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        phone: r.phone,
+        complaint: r.complaint,
+      })) ?? [];
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:py-8">
@@ -106,7 +126,7 @@ export default async function DashboardPage({
           <Link
             href="/"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener"
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <ExternalLink />
@@ -123,6 +143,15 @@ export default async function DashboardPage({
           <QueueList registrations={registrations} />
         </section>
       )}
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Pasien Konfirmasi WA</h2>
+        <ConfirmedPatientsPanel
+          patients={confirmedPatients}
+          eligibleRegistrations={eligibleRegistrations}
+          dateParam={selectedDateParam}
+        />
+      </section>
     </main>
   );
 }

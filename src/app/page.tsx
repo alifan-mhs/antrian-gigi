@@ -7,6 +7,8 @@ import { HiddenAdminAccess } from "@/components/hidden-admin-access";
 import { PwaStandaloneRedirect } from "@/components/pwa-standalone-redirect";
 import { PromoBanner } from "@/components/promo-banner";
 import { SessionStatusAlerts } from "@/components/session-status-alerts";
+import { ConfirmedPatientsSchedule } from "@/components/confirmed-patients-schedule";
+import { CONFIRMED_VISIBLE_STATUSES } from "@/lib/confirmed-patient";
 import { Badge } from "@/components/ui/badge";
 
 // Short-lived ISR: absorb bursts of concurrent walk-in visits with one shared
@@ -33,6 +35,12 @@ export default async function DaftarPage() {
 
   const status = getSessionStatus(session, session?._count.registrations ?? 0);
   const { isManuallyOpen, remaining, quota, canRegister } = status;
+
+  const confirmedPatients = await prisma.confirmedPatient.findMany({
+    where: { date: today, status: { in: CONFIRMED_VISIBLE_STATUSES } },
+    select: { promoLabel: true, timeSlot: true, name: true },
+    orderBy: { createdAt: "asc" },
+  });
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-5 px-4 py-8">
@@ -66,6 +74,10 @@ export default async function DaftarPage() {
       <SessionStatusAlerts session={session} status={status} />
 
       {canRegister && <RegistrationForm />}
+
+      {confirmedPatients.length > 0 && (
+        <ConfirmedPatientsSchedule patients={confirmedPatients} />
+      )}
 
       <p className="pt-2 text-center text-xs text-muted-foreground">
         Ingin cek jadwal hari lain?{" "}

@@ -9,12 +9,13 @@ datasource db {
 }
 
 model Operator {
-  id           String         @id @default(uuid())
-  name         String
-  email        String         @unique
-  passwordHash String
-  createdAt    DateTime       @default(now())
-  sessions     DailySession[]
+  id                String             @id @default(uuid())
+  name              String
+  email             String             @unique
+  passwordHash      String
+  createdAt         DateTime           @default(now())
+  sessions          DailySession[]
+  confirmedPatients ConfirmedPatient[]
 }
 
 model DailySession {
@@ -34,16 +35,17 @@ model DailySession {
 }
 
 model Registration {
-  id          String             @id @default(uuid())
-  session     DailySession       @relation(fields: [sessionId], references: [id])
-  sessionId   String
-  queueNumber Int
-  name        String
-  phone       String
-  complaint   String?
-  status      RegistrationStatus @default(MENUNGGU)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id               String             @id @default(uuid())
+  session          DailySession       @relation(fields: [sessionId], references: [id])
+  sessionId        String
+  queueNumber      Int
+  name             String
+  phone            String
+  complaint        String?
+  status           RegistrationStatus @default(MENUNGGU)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  confirmedPatient ConfirmedPatient?
 
   @@unique([sessionId, phone])
   @@index([sessionId, status])
@@ -56,4 +58,43 @@ enum RegistrationStatus {
   SELESAI
   BATAL
   TIDAK_DATANG
+}
+
+// Patients scheduled into a fixed afternoon/evening slot instead of the daily
+// walk-in quota — usually an existing walk-in Registration the nurse has
+// already marked DIKONFIRMASI after a phone/WA follow-up (sourceRegistration
+// links back to it so its name/phone/complaint don't need retyping), but
+// manual entry (sourceRegistration left null) covers a lead with no walk-in
+// registration at all. promoLabel ("Pasien Promo N") auto-increments per
+// operator per day.
+model ConfirmedPatient {
+  id                   String                 @id @default(uuid())
+  operator             Operator               @relation(fields: [operatorId], references: [id])
+  operatorId           String
+  date                 DateTime               @db.Date
+  promoLabel           String
+  timeSlot             ConfirmedTimeSlot
+  name                 String
+  phone                String
+  complaint            String?
+  status               ConfirmedPatientStatus @default(TERKONFIRMASI)
+  sourceRegistration   Registration?          @relation(fields: [sourceRegistrationId], references: [id])
+  sourceRegistrationId String?                @unique
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  @@index([operatorId, date])
+  @@index([date, timeSlot])
+}
+
+enum ConfirmedTimeSlot {
+  SIANG_SORE
+  MALAM
+}
+
+enum ConfirmedPatientStatus {
+  TERKONFIRMASI
+  SELESAI
+  TIDAK_DATANG
+  BATAL
 }
