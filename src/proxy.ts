@@ -21,10 +21,11 @@ async function isAuthenticated(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/dashboard")) {
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/scan")) {
     const authed = await isAuthenticated(request);
     if (!authed) {
       const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
     }
   }
@@ -32,7 +33,12 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/login") {
     const authed = await isAuthenticated(request);
     if (authed) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      const callbackUrl = request.nextUrl.searchParams.get("callbackUrl");
+      const destination =
+        callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")
+          ? callbackUrl
+          : "/dashboard";
+      return NextResponse.redirect(new URL(destination, request.url));
     }
   }
 
@@ -40,5 +46,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login"],
+  matcher: ["/dashboard/:path*", "/scan/:path*", "/login"],
 };

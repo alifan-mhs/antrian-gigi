@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,11 @@ export function RegistrationForm() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   if (state.status === "success") {
+    const scanUrl =
+      state.registrationId && typeof window !== "undefined"
+        ? `${window.location.origin}/scan/${state.registrationId}`
+        : null;
+
     return (
       <Card className="border-secondary bg-accent">
         <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
@@ -46,6 +52,16 @@ export function RegistrationForm() {
             Simpan/screenshot nomor ini. Perawat akan menghubungi Anda lewat
             telepon/WA sesuai urutan antrian.
           </p>
+
+          {scanUrl && (
+            <div className="mt-4 flex flex-col items-center gap-2 rounded-xl bg-white p-4">
+              <QRCodeSVG value={scanUrl} size={160} />
+              <p className="max-w-xs text-xs text-muted-foreground">
+                Screenshot QR code ini. Tunjukkan ke perawat saat Anda datang
+                untuk di-scan sebagai bukti kedatangan.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     );

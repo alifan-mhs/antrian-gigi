@@ -12,6 +12,7 @@ export type RegisterState = {
   status: "idle" | "success" | "error";
   message?: string;
   queueNumber?: number;
+  registrationId?: string;
 };
 
 export async function registerAction(
@@ -92,6 +93,7 @@ export async function registerAction(
     return {
       status: "success",
       queueNumber: result.queueNumber,
+      registrationId: result.id,
     };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {

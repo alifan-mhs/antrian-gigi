@@ -46,5 +46,13 @@ export async function loginAction(
     name: operator.name,
   });
 
-  redirect("/dashboard");
+  const callbackUrl = formData.get("callbackUrl");
+  const destination =
+    typeof callbackUrl === "string" &&
+    callbackUrl.startsWith("/") &&
+    !callbackUrl.startsWith("//")
+      ? callbackUrl
+      : "/dashboard";
+
+  redirect(destination);
 }
